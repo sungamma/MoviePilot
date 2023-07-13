@@ -1,0 +1,47 @@
+name: Sync upstream
+
+on: 
+  schedule:
+    - cron: '*/30 * * * *'
+  push:    
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+
+  sync:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.ACTIONS_TRIGGER_PAT2 }} #必须在这里加上这个,不然不能更新带WORKFLOW的变动
+        fetch-depth: 0
+        
+    - name: Set up Git
+      run: |
+        git config --global user.name 'sungamma'
+        git config --global user.email '33790+sungamma@users.noreply.github.com'
+
+    - name: Add upstream remote
+      run: |
+        git remote add upstream https://github.com/jxxghp/MoviePilot.git
+
+    - name: Check for upstream updates  
+      id: check
+      run: |
+        git fetch upstream
+        upstream_head=$(git rev-parse upstream/main)  
+        base_commit=$(git merge-base HEAD upstream/main)
+        if [ $upstream_head != $base_commit ]; then
+            echo "::set-output name=updated::true"
+        fi
+    
+    - name: Merge upstream
+      if: steps.check.outputs.updated == 'true'  
+      run: |
+        git fetch upstream
+        git rebase upstream/main  # rebase 处理可能存在的冲突
+        git push -u origin main -f
+
