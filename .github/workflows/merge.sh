@@ -1,5 +1,5 @@
 #!/bin/bash
-diff build-docker.yml build-docker.yml.bak > /dev/null
+diff build.yml build-docker.yml.bak > /dev/null
 if [  "$?" == "0" ]; then #"$?"是上一执行命令的返回值。
     echo "nothing to change"
 else
